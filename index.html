@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body {
+      background-color: green;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper__synth">
+    <select id="voice" name="voice">
+      <option value="">Selecciona una voz</option>
+    </select>
+
+    <label for="rate">Velocidad:</label>
+    <input name="rate" type="range" value="1"  min="0" max="2" step="0.1" />
+
+    <label for="pitch">Pitch:</label>
+    <input name="pitch" type="range" value="1" min="0.1" max="2" step="0.1" />
+
+    <textarea name="text">Hola, soy una voz sintética y digo este texto</textarea>
+
+    <button id="speak">Hablar</button>
+    <button id="stop">Parar</button>
+
+  </div>
+  <script>
+    const utterance = new SpeechSynthesisUtterance();
+    let voices = [];
+
+    let voicesDropDown = document.querySelector('[name="voice"]');
+    const range = document.querySelector('[name="rate"]');
+    const pitch = document.querySelector('[name="pitch"]');
+
+    const speakButton = document.querySelector("#speak");
+    const stopButton = document.querySelector("#stop");
+
+    utterance.text = document.querySelector('[name="text"]').value;
+
+    const populateVoices = async () => {
+      voices = await speechSynthesis.getVoices();
+
+      voicesDropDown.innerHTML = voices
+        .map(({name, lang}, index) => `<option value="${name}" ${index === 0 ? "selected" : ""}>${name} - ${lang}</option>`)
+        .join("")
+
+      setVoice()
+    }
+
+    const setVoice = () => {
+      utterance.voice = voices.find(({name}) => name === voicesDropDown.value)
+      toggle()
+    }
+
+
+    const toggle = (startOver = false) => {
+      speechSynthesis.cancel()
+
+      if(startOver) {
+        speechSynthesis.speak(utterance)
+      }
+    }
+
+    const setRange = () => {
+      utterance[range.name] = range.value
+      toggle()
+    }
+
+    const setPitch = () => {
+      utterance[pitch.name] = pitch.value
+      toggle()
+    }
+
+    speechSynthesis.addEventListener('voiceschanged', () => populateVoices());
+    voicesDropDown.addEventListener('change', () => setVoice())
+    range.addEventListener('change', () => setRange())
+    pitch.addEventListener('change', () => setPitch())
+    speakButton.addEventListener('click', () => toggle(true))
+    stopButton.addEventListener('click', () => toggle(false))
+    utterance.addEventListener('change', () => {
+      console.log('hola')
+    })
+  </script>
+</body>
+</html>
