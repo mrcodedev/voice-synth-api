@@ -25,25 +25,24 @@
 
     <textarea name="text">Hola, soy una voz sintética y digo este texto</textarea>
 
-    <button id="speak">Hablar</button>
-    <button id="stop">Parar</button>
-
-    <button id="pause">Pause</button>
-    <button id="resume">Resume</button>
+    <button id="speak">Talk</button>
+    <button id="stop">Stop</button>
   </div>
 
   <script>
-    const utterance = new SpeechSynthesisUtterance();
     let voices = [];
     let voicesDropDown = document.querySelector('[name="voice"]');
+    let statusSpeechSynth = {paused: false, speaking: false}
+    const TALK_TEXT = "Talk!"
+    const PAUSE_TEXT = "Pause"
+    const RESUME_TEXT = "Resume"
+
+    const utterance = new SpeechSynthesisUtterance();
     const range = document.querySelector('[name="rate"]');
     const pitch = document.querySelector('[name="pitch"]');
     const text = document.querySelector('[name="text"]')
     const speakButton = document.querySelector("#speak");
     const stopButton = document.querySelector("#stop");
-
-    const pauseButton = document.querySelector("#pause");
-    const resumeButton = document.querySelector("#resume");
 
     const languageDictionary = (language) => {
       const languages = {
@@ -108,7 +107,27 @@
     
     // VOICE ACTIONS
     const speak = () => {
+      const { paused, speaking } = statusSpeechSynth;
+
+      if(!paused && !speaking) { speakCancel() }
+
+      if(paused) {
+        speakResume()
+        statusSpeechSynth = {...statusSpeechSynth, paused: false, speaking: true}
+        speakButton.innerHTML = PAUSE_TEXT
+        return
+      }
+      
+      if(speaking) {
+        speakPause();
+        statusSpeechSynth = {...statusSpeechSynth, paused: true, speaking: false}
+        speakButton.innerHTML = RESUME_TEXT
+        return
+      }
+
       speechSynthesis.speak(utterance)
+      statusSpeechSynth = {...statusSpeechSynth, speaking: true}
+      speakButton.innerHTML = PAUSE_TEXT
     }
     
     const speakResume = () => {
@@ -117,21 +136,50 @@
     
     const speakPause = () => {
       speechSynthesis.pause()
+      const event = new Event("custompause", {bubbles: false})
+      speechSynthesis.dispatchEvent(event)
     }
     
     const speakCancel = () => {
       speechSynthesis.cancel()
+      speakButton.innerHTML = TALK_TEXT
+      statusSpeechSynth = {...statusSpeechSynth, speaking: false, speaking: false }
+    }
+
+    const speakError = () => {
+      statusSpeechSynth = {...statusSpeechSynth, speaking: false, speaking: false }
+      speakButton.innerHTML = TALK_TEXT
     }
   
     //SET VOICE PARAMETERS
     const setVoice = () => {
       utterance.voice = voices.find(({name}) => name === voicesDropDown.value)
+      speakCancel()
     }
 
     const setRange = (name , value) => {
+      const { speaking, paused } = statusSpeechSynth
+
+      if (!speaking && !paused) {
+        return 
+      }
+      
+      speakCancel()
+      statusSpeechSynth = {...statusSpeechSynth, speaking: false, paused: false }
+
       utterance[name] = value
+      speak()
     }
 
+    const endVoice = () => {
+      statusSpeechSynth = {...statusSpeechSynth, speaking: false, paused: false }
+      speakButton.innerHTML = TALK_TEXT
+    }
+    
+    const pauseStatusButton = () => {
+      statusSpeechSynth = {...statusSpeechSynth, paused: true}
+      speakButton.innerHTML = RESUME_TEXT
+    }
 
     const init = () => {
       getVoices()
@@ -140,16 +188,18 @@
       setText()
     }
     
-    speechSynthesis.onvoiceschanged = () => init()
-    voicesDropDown.onchange = () => setVoice()
-    range.onchange = () => setRange(range.name, range.value)
-    pitch.onchange = () => setRange(pitch.name, pitch.value)
-    text.oninput = () => setText()
+    speechSynthesis.addEventListener('voiceschanged', () => init())
+    voicesDropDown.addEventListener('change', () => setVoice())
+    range.addEventListener('change', () => setRange(range.name, range.value))
+    pitch.addEventListener('change', () => setRange(pitch.name, pitch.value))
+    text.addEventListener('input', () => setText())
 
-    speakButton.onclick = () => speak()
-    stopButton.onclick = () => speakCancel()
-    pauseButton.onclick = () =>  speakPause()
-    resumeButton.onclick = () =>  speakResume()
+    speakButton.addEventListener('click', () => speak())
+    stopButton.addEventListener('click', () => speakCancel())
+
+    speechSynthesis.addEventListener('custompause', (event) => pauseStatusButton())
+    utterance.addEventListener('end', () => endVoice())
+    utterance.addEventListener('error', () => speakError())
   </script>
 </body>
 </html>
