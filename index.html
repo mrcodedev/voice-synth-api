@@ -4,29 +4,86 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>MrCodeDev - API Voices</title>
   <style>
+
     body {
-      background-color: green;
+      background-image: url(assets/img/bg.jpeg); 
+      display: flex;
+      height: 100vh;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+    }
+
+    .wrapper__synth {
+      background-color: white;
+      width: 400px;
+      padding: 20px;
+    }
+
+    .synth__title {
+      text-align: center;
+      background-color: black;
+    }
+
+    .synth__title > h1 {
+      margin: 0;
+      color: white;
+    }
+
+    .synth__voices {
+      margin: 15px 0px;
+    }
+
+    .synth__text {
+      width: 100%;
+    }
+
+    .synth__text > textarea {
+      width: 100%;
+      height: 100px;
+      margin: 10px 0px;
+    }
+
+    .synth__voice-actions {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .synth__button-actions {
+      text-align: center;
     }
   </style>
 </head>
 <body>
   <div class="wrapper__synth">
-    <select id="voice" name="voice">
-      <option value="">Selecciona una voz</option>
-    </select>
-
-    <label for="rate">Velocidad:</label>
-    <input name="rate" type="range" value="1"  min="0" max="2" step="0.1" />
-
-    <label for="pitch">Pitch:</label>
-    <input name="pitch" type="range" value="1" min="0.1" max="2" step="0.1" />
-
-    <textarea name="text">Hola, soy una voz sintética y digo este texto</textarea>
-
-    <button id="speak">Talk</button>
-    <button id="stop">Stop</button>
+    <div class="synth__title">
+      <h1>MrCodeDev API Voices</h1>
+    </div>
+    <div class="synth__voices">
+      <select id="voice" name="voice">
+        <option value="">Select a voice...</option>
+      </select>
+    </div>
+    <div class="synth__voice-actions">
+      <label for="rate">Velocity:</label>
+      <input name="rate" type="range" value="0.5"  min="0" max="2" step="0.1" />
+  
+      <label for="pitch">Pitch:</label>
+      <input name="pitch" type="range" value="1" min="0" max="2" step="0.1" />
+  
+      <label for="volume">Volume:</label>
+      <input name="volume" type="range" value="0.7"  min="0" max="1" step="0.1" />
+    </div>
+    <div class="synth__text">
+      <textarea name="text">Hi!, im MrCodeDev and this is a example with a synth voice</textarea>
+    </div>
+    <div class="synth__button-actions">
+      <button id="speak">Talk</button>
+      <button id="stop">Stop</button>
+    </div>
   </div>
 
   <script>
@@ -40,6 +97,7 @@
     const utterance = new SpeechSynthesisUtterance();
     const range = document.querySelector('[name="rate"]');
     const pitch = document.querySelector('[name="pitch"]');
+    const volume = document.querySelector('[name="volume"]');
     const text = document.querySelector('[name="text"]')
     const speakButton = document.querySelector("#speak");
     const stopButton = document.querySelector("#stop");
@@ -192,6 +250,7 @@
     voicesDropDown.addEventListener('change', () => setVoice())
     range.addEventListener('change', () => setRange(range.name, range.value))
     pitch.addEventListener('change', () => setRange(pitch.name, pitch.value))
+    volume.addEventListener('change', () => setRange(volume.name, volume.value))
     text.addEventListener('input', () => setText())
 
     speakButton.addEventListener('click', () => speak())
